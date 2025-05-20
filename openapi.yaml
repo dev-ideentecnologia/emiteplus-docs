@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: API de Emissão de NFSe Nacional - MEI
+  description: >
+    API exclusiva para emissão e cancelamento de Notas Fiscais de Serviço Eletrônicas (NFSe) por MEIs, via Portal Nacional.
+    A autenticação é feita via `x-api-key` no header.
+  version: 1.0.2
+servers:
+  - url: https://api.suaempresa.com.br/v1
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  schemas:
+    Emitente:
+      type: object
+      required: [cpfCnpj, razaoSocial, endereco]
+      properties:
+        cpfCnpj: { type: string }
+        razaoSocial: { type: string }
+        nomeFantasia: { type: string }
+        email: { type: string }
+        endereco:
+          type: object
+          properties:
+            tipoLogradouro: { type: string }
+            logradouro: { type: string }
+            numero: { type: string }
+            bairro: { type: string }
+            codigoCidade: { type: string }
+            estado: { type: string }
+            cep: { type: string }
+    EmissaoNFSe:
+      type: object
+      required: [idIntegracao, natureza, valorTotal, servico, tomador]
+      properties:
+        idIntegracao: { type: string }
+        natureza: { type: string, enum: [VENDA, PRESTACAO] }
+        valorTotal: { type: number }
+        servico:
+          type: object
+          properties:
+            codigoTributacao: { type: string }
+            descricao: { type: string }
+            aliquota: { type: number }
+        tomador:
+          type: object
+          properties:
+            cpfCnpj: { type: string }
+            razaoSocial: { type: string }
+            email: { type: string }
+            endereco:
+              type: object
+              properties:
+                tipoLogradouro: { type: string }
+                logradouro: { type: string }
+                numero: { type: string }
+                bairro: { type: string }
+                codigoCidade: { type: string }
+                estado: { type: string }
+                cep: { type: string }
+    CancelamentoNFSe:
+      type: object
+      required: [idIntegracao, justificativa]
+      properties:
+        idIntegracao: { type: string }
+        justificativa: { type: string }
+security:
+  - ApiKeyAuth: []
+paths:
+  /nfse/mei/emitente:
+    post:
+      summary: Cadastrar Emitente MEI
+      operationId: cadastrarEmitente
+      tags: [Emitente]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Emitente'
+      responses:
+        '201': { description: Emitente cadastrado com sucesso }
+        '400': { description: Erro de validação }
+  /nfse/mei/emitente/{cpfCnpj}:
+    get:
+      summary: Consultar Emitente MEI
+      operationId: consultarEmitente
+      tags: [Emitente]
+      parameters:
+        - in: path
+          name: cpfCnpj
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Dados do emitente }
+        '404': { description: Emitente não encontrado }
+  /nfse/mei/emissao:
+    post:
+      summary: Emitir NFSe
+      operationId: emitirNFSe
+      tags: [NFSe]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmissaoNFSe'
+      responses:
+        '202': { description: NFSe enviada para processamento }
+        '400': { description: Erro na requisição }
+  /nfse/mei/cancelamento:
+    post:
+      summary: Cancelar NFSe
+      operationId: cancelarNFSe
+      tags: [NFSe]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelamentoNFSe'
+      responses:
+        '200': { description: Cancelamento solicitado }
+        '404': { description: NFSe não encontrada }
+  /nfse/mei/consulta/{idIntegracao}:
+    get:
+      summary: Consultar Situação da NFSe
+      operationId: consultarSituacaoNFSe
+      tags: [NFSe]
+      parameters:
+        - in: path
+          name: idIntegracao
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Status atual da NFSe }
+        '404': { description: NFSe não encontrada }
