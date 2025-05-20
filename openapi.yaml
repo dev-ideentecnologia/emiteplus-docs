@@ -192,6 +192,21 @@ paths:
   /certificado:
     post:
       summary: Cadastrar Certificado Digital
+      description: |
+        Realiza o cadastro de um certificado digital no formato `.pfx` ou `.p12`, associado ao CNPJ do emitente.
+
+        ⚠️ Esse certificado será utilizado para autenticar as requisições de emissão de notas em prefeituras que exigem assinatura digital.
+
+        ✅ Cenários comuns:
+        - Obrigatório para municípios com Web Service próprio
+        - Necessário mesmo em cidades que utilizam o Portal Nacional, para autenticação
+
+        📥 Formato:
+        - `arquivo`: certificado em base64 (enviado como arquivo binário via multipart/form-data)
+        - `senha`: senha de acesso ao certificado
+        - `email`: (opcional) usado para notificação de vencimento
+
+        🔐 Após o cadastro, o ID retornado deve ser utilizado no campo `certificado` do emitente.
       operationId: cadastrarCertificado
       tags:
       - Certificado
@@ -228,6 +243,15 @@ paths:
   /certificado/{id}:
     get:
       summary: Consultar Certificado Digital
+      description: |
+        Retorna os dados de um certificado digital previamente cadastrado na API.
+
+        🔍 Use essa rota para:
+        - Verificar o status e validade do certificado
+        - Confirmar o CNPJ vinculado
+        - Validar o ID do certificado para uso no cadastro do emitente
+
+        💡 Essa consulta ajuda a garantir que o certificado correto foi enviado e está ativo, evitando falhas em processos de emissão.
       operationId: consultarCertificado
       tags:
       - Certificado
@@ -261,6 +285,14 @@ paths:
       - ApiKeyAuth: []
     delete:
       summary: Excluir Certificado Digital
+      description: |
+        Remove um certificado digital previamente cadastrado.
+
+        ⚠️ Esta ação é irreversível. Uma vez removido, o certificado **não poderá mais ser utilizado** para emissão de NFS-e.
+
+        🧾 É necessário garantir que o certificado **não esteja vinculado a nenhum emitente ativo** antes de removê-lo.
+
+        🔐 Essa operação deve ser usada com cautela para manter a integridade do ambiente de produção.
       operationId: excluirCertificado
       tags:
       - Certificado
@@ -281,36 +313,25 @@ paths:
   /nfse/emitente:
     post:
       summary: Cadastrar Emitente
-      description: 'Cadastra e vincula uma nova Empresa (emitente/prestador) à sua
-        organização.
+      description: |
+        Cadastra e vincula uma nova empresa (emitente/prestador de serviço) à sua organização para emissão de NFS-e.
 
-
-        ⚠️ Para evitar erros no processo de emissão, algumas validações são dinâmicas
-        e podem ser obrigatórias dependendo do município e do cenário:
-
+        ⚠️ Algumas validações são dinâmicas e obrigatórias conforme o município informado. São exemplos:
         - Inscrição Municipal
-
-        - Certificado Digital
-
+        - Certificado Digital (ID de certificado previamente cadastrado)
         - Credenciais de acesso à Prefeitura (login e senha)
 
+        📌 Este cadastro é obrigatório para qualquer ação relacionada à emissão ou consulta de NFS-e.
 
-        💡 **Cenários de uso:**
+        💡 Cenários comuns de uso:
+        - Desejo emitir uma nota fiscal de serviço
+        - Desejo consultar notas fiscais emitidas contra meu CNPJ
 
-        - Cadastrar um emitente para **emitir NFS-e**.
+        🔎 Consulte a rota `/nfse/cidade/{codigoIBGE}` para verificar os requisitos específicos por município.
 
-        - Cadastrar um emitente para **consultar notas fiscais emitidas contra seu
-        CNPJ** (consulta passiva).
+        ✉️ Caso o campo `config.email.ativo` esteja definido como `true`, o tomador da nota receberá automaticamente XML + PDF por e-mail, mesmo sem ativar o campo `enviarEmail` no momento da emissão.
 
-
-        ℹ️ **Observações importantes:**
-
-        - Para consultar os dados obrigatórios por município, utilize a rota: `/nfse/cidade/{codigoIBGE}`
-
-
-        ✅ Também disponível para gerenciamento via interface web.
-
-        '
+        🔧 Disponível também via interface web.
       operationId: cadastrarEmitente
       tags:
       - Emitente
@@ -328,6 +349,15 @@ paths:
   /nfse/emitente/{cpfCnpj}:
     get:
       summary: Consultar Emitente
+      description: |
+        Retorna os dados de configuração do emitente vinculado ao CNPJ informado.
+
+        🔍 Use essa rota para:
+        - Verificar se o emitente já está cadastrado na plataforma
+        - Recuperar configurações atuais como certificados vinculados, ambiente, RPS e dados da prefeitura
+        - Validar se os requisitos para emissão estão completos
+
+        💡 Útil também para verificar dados antes de uma reconfiguração ou emissão em lote.
       operationId: consultarEmitente
       tags:
       - Emitente
@@ -342,74 +372,20 @@ paths:
           description: Dados do emitente
         '404':
           description: Emitente não encontrado
-  /nfse/emissao:
-    post:
-      summary: Emitir NFSe
-      operationId: emitirNFSe
-      tags:
-      - NFSe
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EmissaoNFSe'
-      responses:
-        '202':
-          description: NFSe enviada para processamento
-        '400':
-          description: Erro na requisição
-  /nfse/cancelamento:
-    post:
-      summary: Cancelar NFSe
-      operationId: cancelarNFSe
-      tags:
-      - NFSe
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CancelamentoNFSe'
-      responses:
-        '200':
-          description: Cancelamento solicitado
-        '404':
-          description: NFSe não encontrada
-  /nfse/consulta/{idIntegracao}:
-    get:
-      summary: Consultar Situação da NFSe
-      operationId: consultarSituacaoNFSe
-      tags:
-      - NFSe
-      parameters:
-      - in: path
-        name: idIntegracao
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Status atual da NFSe
-        '404':
-          description: NFSe não encontrada
   /nfse/cidade/{codigoIBGE}:
     get:
       summary: Consultar Metadados do Município
-      description: 'Retorna os metadados de configuração exigidos pelo município para
-        emissão de NFS-e.
+      description: |
+        Retorna os metadados e requisitos de configuração para emissão de NFS-e no município informado.
 
+        🔍 Use essa rota para:
+        - Verificar se a cidade utiliza o Portal Nacional ou WebService próprio
+        - Identificar os campos obrigatórios para o cadastro do emitente (ex: certificado, login, inscrição municipal)
+        - Validar o código IBGE informado no cadastro
 
-        - Verifica se a cidade está integrada ao Portal Nacional ou WebService próprio
+        📘 Essa rota é especialmente útil para automatizar a ativação do emitente, evitando rejeições no momento da emissão.
 
-        - Indica se exige certificado digital, login/senha, inscrição municipal, etc.
-
-
-        🔍 Exemplo de uso:
-
-        `/nfse/cidade/5208707`
-
-        '
+        🧠 Dica: Utilize essa rota antes de cadastrar ou atualizar o emitente.
       operationId: consultarCidade
       tags:
       - Auxiliares
@@ -444,6 +420,100 @@ paths:
           description: Município não encontrado
       security:
       - ApiKeyAuth: []
+  /nfse/emissao:
+    post:
+      summary: Emitir NFSe
+      description: |
+        Realiza a emissão de uma Nota Fiscal de Serviço Eletrônica (NFS-e), com base nas configurações do emitente previamente cadastrado.
+
+        🧾 A nota será processada conforme a cidade do emitente, podendo utilizar:
+        - Integração com Web Service próprio da Prefeitura
+        - Integração com o Portal Nacional (MEI ou Simples Nacional)
+
+        📦 Campos essenciais:
+        - `idIntegracao`: identificador único da nota (controle do cliente)
+        - `natureza`: VENDA ou PRESTACAO
+        - `servico`: dados da atividade prestada, incluindo tributação e descrição
+        - `tomador`: dados do cliente
+
+        ⏱️ A resposta retorna status 202, e o processamento ocorrerá de forma assíncrona.
+
+        Para acompanhar o status da nota, utilize a rota `/nfse/consulta/{idIntegracao}`.
+      operationId: emitirNFSe
+      tags:
+      - NFSe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmissaoNFSe'
+      responses:
+        '202':
+          description: NFSe enviada para processamento
+        '400':
+          description: Erro na requisição
+  /nfse/cancelamento:
+    post:
+      summary: Cancelar NFSe
+      description: |
+        Solicita o cancelamento de uma Nota Fiscal de Serviço Eletrônica (NFS-e) emitida anteriormente.
+
+        📌 Para realizar o cancelamento, é necessário:
+        - Informar o `idIntegracao` utilizado na emissão
+        - Justificar o motivo do cancelamento no campo `justificativa`
+
+        ⚠️ A aprovação ou rejeição do cancelamento depende das regras de cada município.
+        Em alguns casos, é necessário que:
+        - A nota ainda esteja dentro do prazo de cancelamento
+        - A nota não tenha sido transmitida à prefeitura ainda
+
+        ⏱️ O cancelamento também pode ser assíncrono. Para confirmar o resultado, consulte o status da nota via `/nfse/consulta/{idIntegracao}`.
+      operationId: cancelarNFSe
+      tags:
+      - NFSe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelamentoNFSe'
+      responses:
+        '200':
+          description: Cancelamento solicitado
+        '404':
+          description: NFSe não encontrada
+  /nfse/consulta/{idIntegracao}:
+    get:
+      summary: Consultar Situação da NFSe
+      description: |
+        Consulta o status atual de uma NFS-e emitida ou em processamento, utilizando o `idIntegracao` informado no momento da emissão.
+
+        🔍 Possíveis retornos:
+        - Nota autorizada e disponível com links para XML e PDF
+        - Nota em processamento
+        - Nota rejeitada ou com erro na transmissão
+
+        💡 Essa rota deve ser utilizada para:
+        - Confirmar a autorização da nota
+        - Obter links de documentos gerados
+        - Acompanhar solicitações de cancelamento
+
+        ⚠️ Notas emitidas de forma assíncrona devem obrigatoriamente ser acompanhadas por essa rota para saber se foram concluídas com sucesso.
+      operationId: consultarSituacaoNFSe
+      tags:
+      - NFSe
+      parameters:
+      - in: path
+        name: idIntegracao
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Status atual da NFSe
+        '404':
+          description: NFSe não encontrada
 tags:
 - name: Certificado
   description: Gestão de certificados digitais
