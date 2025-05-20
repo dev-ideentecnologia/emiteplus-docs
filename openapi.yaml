@@ -4,7 +4,7 @@ info:
   description: 'API exclusiva para emissão e cancelamento de Notas Fiscais de Serviço
     Eletrônicas (NFSe), via Portal Nacional. A autenticação é feita via `x-api-key`
     no header.
-
+    (Em desenvolvimento)
     '
   version: 1.0.2
 servers:
