@@ -1,0 +1,32 @@
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #FFFFFF;
+  color: #1D1D1D;
+}
+
+.swagger-ui .topbar {
+  background-color: #3E50C7;
+}
+
+.swagger-ui .topbar-wrapper .link span {
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+.swagger-ui .info h1, .swagger-ui .info h2, .swagger-ui .info h3 {
+  color: #1D1D1D;
+}
+
+.swagger-ui .btn.authorize {
+  background-color: #3E50C7 !important;
+  color: #FFFFFF !important;
+}
+
+.swagger-ui .opblock.opblock-post {
+  border-left-color: #3E50C7;
+}
+
+.topbar-wrapper img {
+  content: url("./imgs/logo.png"); /* nome do seu logo */
+  max-height: 40px;
+}
