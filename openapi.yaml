@@ -1,12 +1,14 @@
 openapi: 3.0.3
 info:
-  title: API de Emissão de NFSe Nacional - MEI
-  description: >
-    API exclusiva para emissão e cancelamento de Notas Fiscais de Serviço Eletrônicas (NFSe) por MEIs, via Portal Nacional.
-    A autenticação é feita via `x-api-key` no header.
+  title: API de Emissão de NFSe Nacional
+  description: 'API exclusiva para emissão e cancelamento de Notas Fiscais de Serviço
+    Eletrônicas (NFSe), via Portal Nacional. A autenticação é feita via `x-api-key`
+    no header.
+
+    '
   version: 1.0.2
 servers:
-  - url: https://api.suaempresa.com.br/v1
+- url: https://api.emiteplus.com.br/v1
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -16,65 +18,302 @@ components:
   schemas:
     Emitente:
       type: object
-      required: [cpfCnpj, razaoSocial, endereco]
+      required:
+      - cpfCnpj
+      - razaoSocial
+      - email
+      - inscricaoMunicipal
+      - telefone
+      - endereco
+      - config
+      - certificado
       properties:
-        cpfCnpj: { type: string }
-        razaoSocial: { type: string }
-        nomeFantasia: { type: string }
-        email: { type: string }
+        cpfCnpj:
+          type: string
+        razaoSocial:
+          type: string
+        nomeFantasia:
+          type: string
+        email:
+          type: string
+        inscricaoEstadual:
+          type: string
+        inscricaoMunicipal:
+          type: string
+        simplesNacional:
+          type: boolean
+        incentivadorCultural:
+          type: boolean
+        incentivoFiscal:
+          type: boolean
+        regimeTributario:
+          type: integer
+        regimeTributarioEspecial:
+          type: integer
+        certificado:
+          type: string
+          description: ID do certificado digital já cadastrado
+        telefone:
+          type: object
+          required:
+          - ddd
+          - numero
+          properties:
+            ddd:
+              type: string
+            numero:
+              type: string
         endereco:
           type: object
+          required:
+          - logradouro
+          - numero
+          - bairro
+          - codigoCidade
+          - estado
+          - cep
           properties:
-            tipoLogradouro: { type: string }
-            logradouro: { type: string }
-            numero: { type: string }
-            bairro: { type: string }
-            codigoCidade: { type: string }
-            estado: { type: string }
-            cep: { type: string }
+            tipoLogradouro:
+              type: string
+            logradouro:
+              type: string
+            numero:
+              type: string
+            complemento:
+              type: string
+            bairro:
+              type: string
+            codigoCidade:
+              type: string
+            estado:
+              type: string
+            cep:
+              type: string
+        config:
+          type: object
+          required:
+          - producao
+          - prefeitura
+          properties:
+            producao:
+              type: boolean
+            prefeitura:
+              type: object
+              required:
+              - codigoCidade
+              properties:
+                codigoCidade:
+                  type: string
+                  example: '5208707'
+                login:
+                  type: string
+                senha:
+                  type: string
+            rps:
+              type: object
+              properties:
+                lote:
+                  type: integer
+                numeracao:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      numero:
+                        type: integer
+                      serie:
+                        type: string
     EmissaoNFSe:
       type: object
-      required: [idIntegracao, natureza, valorTotal, servico, tomador]
+      required:
+      - idIntegracao
+      - natureza
+      - valorTotal
+      - servico
+      - tomador
       properties:
-        idIntegracao: { type: string }
-        natureza: { type: string, enum: [VENDA, PRESTACAO] }
-        valorTotal: { type: number }
+        idIntegracao:
+          type: string
+        natureza:
+          type: string
+          enum:
+          - VENDA
+          - PRESTACAO
+        valorTotal:
+          type: number
         servico:
           type: object
           properties:
-            codigoTributacao: { type: string }
-            descricao: { type: string }
-            aliquota: { type: number }
+            codigoTributacao:
+              type: string
+            descricao:
+              type: string
+            aliquota:
+              type: number
         tomador:
           type: object
           properties:
-            cpfCnpj: { type: string }
-            razaoSocial: { type: string }
-            email: { type: string }
+            cpfCnpj:
+              type: string
+            razaoSocial:
+              type: string
+            email:
+              type: string
             endereco:
               type: object
               properties:
-                tipoLogradouro: { type: string }
-                logradouro: { type: string }
-                numero: { type: string }
-                bairro: { type: string }
-                codigoCidade: { type: string }
-                estado: { type: string }
-                cep: { type: string }
+                tipoLogradouro:
+                  type: string
+                logradouro:
+                  type: string
+                numero:
+                  type: string
+                bairro:
+                  type: string
+                codigoCidade:
+                  type: string
+                estado:
+                  type: string
+                cep:
+                  type: string
     CancelamentoNFSe:
       type: object
-      required: [idIntegracao, justificativa]
+      required:
+      - idIntegracao
+      - justificativa
       properties:
-        idIntegracao: { type: string }
-        justificativa: { type: string }
+        idIntegracao:
+          type: string
+        justificativa:
+          type: string
 security:
-  - ApiKeyAuth: []
+- ApiKeyAuth: []
 paths:
-  /nfse/mei/emitente:
+  /certificado:
     post:
-      summary: Cadastrar Emitente MEI
+      summary: Cadastrar Certificado Digital
+      operationId: cadastrarCertificado
+      tags:
+      - Certificado
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - arquivo
+              - senha
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+                  description: Certificado digital no formato .pfx ou .p12
+                senha:
+                  type: string
+                  description: Senha do certificado digital
+                email:
+                  type: string
+                  format: email
+                  description: E-mail para notificações (opcional)
+      responses:
+        '200':
+          description: Certificado cadastrado com sucesso
+        '400':
+          description: Erro na requisição
+        '401':
+          description: Token de autenticação inválido ou ausente
+      security:
+      - ApiKeyAuth: []
+  /certificado/{id}:
+    get:
+      summary: Consultar Certificado Digital
+      operationId: consultarCertificado
+      tags:
+      - Certificado
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          example: 64f5f10b3943ac2f88ba29e1
+      responses:
+        '200':
+          description: Certificado encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  cpfCnpj:
+                    type: string
+                  validade:
+                    type: string
+                    format: date
+                  email:
+                    type: string
+        '404':
+          description: Certificado não encontrado
+      security:
+      - ApiKeyAuth: []
+    delete:
+      summary: Excluir Certificado Digital
+      operationId: excluirCertificado
+      tags:
+      - Certificado
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          example: 64f5f10b3943ac2f88ba29e1
+      responses:
+        '204':
+          description: Certificado excluído com sucesso
+        '404':
+          description: Certificado não encontrado
+      security:
+      - ApiKeyAuth: []
+  /nfse/emitente:
+    post:
+      summary: Cadastrar Emitente
+      description: 'Cadastra e vincula uma nova Empresa (emitente/prestador) à sua
+        organização.
+
+
+        ⚠️ Para evitar erros no processo de emissão, algumas validações são dinâmicas
+        e podem ser obrigatórias dependendo do município e do cenário:
+
+        - Inscrição Municipal
+
+        - Certificado Digital
+
+        - Credenciais de acesso à Prefeitura (login e senha)
+
+
+        💡 **Cenários de uso:**
+
+        - Cadastrar um emitente para **emitir NFS-e**.
+
+        - Cadastrar um emitente para **consultar notas fiscais emitidas contra seu
+        CNPJ** (consulta passiva).
+
+
+        ℹ️ **Observações importantes:**
+
+        - Para consultar os dados obrigatórios por município, utilize a rota: `/nfse/cidade/{codigoIBGE}`
+
+
+        ✅ Também disponível para gerenciamento via interface web.
+
+        '
       operationId: cadastrarEmitente
-      tags: [Emitente]
+      tags:
+      - Emitente
       requestBody:
         required: true
         content:
@@ -82,26 +321,33 @@ paths:
             schema:
               $ref: '#/components/schemas/Emitente'
       responses:
-        '201': { description: Emitente cadastrado com sucesso }
-        '400': { description: Erro de validação }
-  /nfse/mei/emitente/{cpfCnpj}:
+        '201':
+          description: Emitente cadastrado com sucesso
+        '400':
+          description: Erro de validação
+  /nfse/emitente/{cpfCnpj}:
     get:
-      summary: Consultar Emitente MEI
+      summary: Consultar Emitente
       operationId: consultarEmitente
-      tags: [Emitente]
+      tags:
+      - Emitente
       parameters:
-        - in: path
-          name: cpfCnpj
-          required: true
-          schema: { type: string }
+      - in: path
+        name: cpfCnpj
+        required: true
+        schema:
+          type: string
       responses:
-        '200': { description: Dados do emitente }
-        '404': { description: Emitente não encontrado }
-  /nfse/mei/emissao:
+        '200':
+          description: Dados do emitente
+        '404':
+          description: Emitente não encontrado
+  /nfse/emissao:
     post:
       summary: Emitir NFSe
       operationId: emitirNFSe
-      tags: [NFSe]
+      tags:
+      - NFSe
       requestBody:
         required: true
         content:
@@ -109,13 +355,16 @@ paths:
             schema:
               $ref: '#/components/schemas/EmissaoNFSe'
       responses:
-        '202': { description: NFSe enviada para processamento }
-        '400': { description: Erro na requisição }
-  /nfse/mei/cancelamento:
+        '202':
+          description: NFSe enviada para processamento
+        '400':
+          description: Erro na requisição
+  /nfse/cancelamento:
     post:
       summary: Cancelar NFSe
       operationId: cancelarNFSe
-      tags: [NFSe]
+      tags:
+      - NFSe
       requestBody:
         required: true
         content:
@@ -123,18 +372,84 @@ paths:
             schema:
               $ref: '#/components/schemas/CancelamentoNFSe'
       responses:
-        '200': { description: Cancelamento solicitado }
-        '404': { description: NFSe não encontrada }
-  /nfse/mei/consulta/{idIntegracao}:
+        '200':
+          description: Cancelamento solicitado
+        '404':
+          description: NFSe não encontrada
+  /nfse/consulta/{idIntegracao}:
     get:
       summary: Consultar Situação da NFSe
       operationId: consultarSituacaoNFSe
-      tags: [NFSe]
+      tags:
+      - NFSe
       parameters:
-        - in: path
-          name: idIntegracao
-          required: true
-          schema: { type: string }
+      - in: path
+        name: idIntegracao
+        required: true
+        schema:
+          type: string
       responses:
-        '200': { description: Status atual da NFSe }
-        '404': { description: NFSe não encontrada }
+        '200':
+          description: Status atual da NFSe
+        '404':
+          description: NFSe não encontrada
+  /nfse/cidade/{codigoIBGE}:
+    get:
+      summary: Consultar Metadados do Município
+      description: 'Retorna os metadados de configuração exigidos pelo município para
+        emissão de NFS-e.
+
+
+        - Verifica se a cidade está integrada ao Portal Nacional ou WebService próprio
+
+        - Indica se exige certificado digital, login/senha, inscrição municipal, etc.
+
+
+        🔍 Exemplo de uso:
+
+        `/nfse/cidade/5208707`
+
+        '
+      operationId: consultarCidade
+      tags:
+      - Auxiliares
+      parameters:
+      - in: path
+        name: codigoIBGE
+        required: true
+        schema:
+          type: string
+        description: Código IBGE da cidade (7 dígitos)
+      responses:
+        '200':
+          description: Metadados do município
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nome:
+                    type: string
+                  codigoIBGE:
+                    type: string
+                  exigeCertificado:
+                    type: boolean
+                  exigeCredencial:
+                    type: boolean
+                  usaPortalNacional:
+                    type: boolean
+                  inscricaoMunicipalObrigatoria:
+                    type: boolean
+        '404':
+          description: Município não encontrado
+      security:
+      - ApiKeyAuth: []
+tags:
+- name: Certificado
+  description: Gestão de certificados digitais
+- name: Emitente
+  description: Cadastro e configuração de empresas emissoras
+- name: Auxiliares
+  description: Rotas de apoio e metadados dos municípios
+- name: NFSe
+  description: Operações de emissão, cancelamento e consulta de NFSe
