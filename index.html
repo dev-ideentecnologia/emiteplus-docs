@@ -1,19 +1,18 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <title>Emite Plus API - Documentação</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
 </head>
-
 <body>
   <div id="swagger-ui"></div>
   <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
   <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
   <script>
     window.onload = () => {
-      const spec = {/* seu JSON embutido aqui */ };
+      const spec = {"openapi": "3.0.3", "info": {"title": "API de Emiss\u00e3o de NFSe Nacional - MEI", "description": "API exclusiva para emiss\u00e3o e cancelamento de Notas Fiscais de Servi\u00e7o Eletr\u00f4nicas (NFSe) por MEIs, via Portal Nacional.\nA autentica\u00e7\u00e3o \u00e9 feita via `x-api-key` no header.", "version": "1.0.2"}, "servers": [{"url": "https://api.suaempresa.com.br/v1"}], "components": {"securitySchemes": {"ApiKeyAuth": {"type": "apiKey", "in": "header", "name": "x-api-key"}}}, "security": [{"ApiKeyAuth": []}], "paths": {"/nfse/mei/emitente": {"post": {"summary": "Cadastrar Emitente MEI", "tags": ["Emitente"], "responses": {"201": {"description": "Emitente cadastrado com sucesso"}, "400": {"description": "Erro de valida\u00e7\u00e3o"}}}}, "/nfse/mei/emissao": {"post": {"summary": "Emitir NFSe", "tags": ["NFSe"], "responses": {"202": {"description": "NFSe enviada para processamento"}, "400": {"description": "Erro na requisi\u00e7\u00e3o"}}}}}};
       SwaggerUIBundle({
         spec: spec,
         dom_id: '#swagger-ui',
@@ -25,7 +24,5 @@
       });
     };
   </script>
-
 </body>
-
 </html>
